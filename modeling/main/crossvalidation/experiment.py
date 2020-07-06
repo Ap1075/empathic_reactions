@@ -9,6 +9,8 @@ import numpy as np
 import keras
 from sklearn.linear_model import RidgeCV, LogisticRegressionCV
 from sklearn.model_selection import KFold
+from pandas import json_normalize
+import json
 
 ## extra imports to set GPU options
 import tensorflow as tf
@@ -33,7 +35,15 @@ k.tensorflow_backend.set_session(tf.Session(config=config))
 # train, dev, test=util.train_dev_test_split(util.get_messages())
 # data=pd.concat([train,test], axis=0) #excluding dev set from CV
 # data=data.reset_index(drop=True)
-my_test = pd.read_csv('/media/armaan/AP-HD1/Battlefield/gnani/datasets/Transcripts/test_emots.csv')
+
+with open('/media/armaan/AP-HD1/Battlefield/gnani/datasets/Transcripts/20200301_0652_919741727232_12313112.mp3.xyz') as f: 
+    d = json.load(f)
+
+my_test = json_normalize(d['results'],record_path ='alternatives')
+my_test.rename(columns={"transcript":"essay"}, inplace=True)
+col_types = {'startTime':float, 'endTime':float, 'essay':object, 'confidence':int, 'speaker':int}
+my_test = my_test.astype(col_types) 
+# my_test = pd.read_csv('/media/armaan/AP-HD1/Battlefield/gnani/datasets/Transcripts/test_emots.csv')
 my_test = my_test[my_test['speaker']==2] ## specifying only agent's part
 ########################################
 
