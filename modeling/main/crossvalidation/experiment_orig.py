@@ -30,11 +30,9 @@ k.tensorflow_backend.set_session(tf.Session(config=config))
 
 
 #######		Setting up data		########
-# train, dev, test=util.train_dev_test_split(util.get_messages())
-# data=pd.concat([train,test], axis=0) #excluding dev set from CV
-# data=data.reset_index(drop=True)
-my_test = pd.read_csv('/media/armaan/AP-HD1/Battlefield/gnani/datasets/Transcripts/test_emots.csv')
-my_test = my_test[my_test['speaker']==2] ## specifying only agent's part
+train, dev, test=util.train_dev_test_split(util.get_messages())
+data=pd.concat([train,test], axis=0) #excluding dev set from CV
+data=data.reset_index(drop=True)
 ########################################
 
 # print(data, data.shape)
@@ -60,8 +58,8 @@ TARGETS=['empathy', 'distress']
 # features_test_centroid=fe.embedding_centroid(test.essay, embs)
 # features_test_matrix=fe.embedding_matrix(test.essay, embs, common.TIMESTEPS)
 
-FEATURES_MATRIX=fe.embedding_matrix(my_test.essay, embs, common.TIMESTEPS)
-FEATURES_CENTROID=fe.embedding_centroid(my_test.essay, embs)
+FEATURES_MATRIX=fe.embedding_matrix(data.essay, embs, common.TIMESTEPS)
+FEATURES_CENTROID=fe.embedding_centroid(data.essay, embs)
 
 # LABELS={
 # 	'empathy':{'classification':'empathy_bin', 'regression':'empathy'},
@@ -122,78 +120,76 @@ performancens={name:pd.DataFrame(columns=['empathy', 'distress'],
 
 
 kf_iterator=KFold(n_splits=num_splits, shuffle=True, random_state=42)
-# for i, splits in enumerate(kf_iterator.split(data)):
-	# train,test=splits
+for i, splits in enumerate(kf_iterator.split(data)):
+	train,test=splits
 
-# test = pd.read_csv('/media/armaan/AP-HD1/Battlefield/gnani/datasets/Transcripts/test_emots.csv')
+	k.clear_session()
 
-k.clear_session()
+	for target in TARGETS:
+		print(target)
 
-for target in TARGETS:
-	print(target)
+		labels_train=data[target][train]
+		labels_test=data[target][test]
 
-	# labels_train=data[target][train]
-	# labels_test=data[target][test]
+		features_train_centroid=FEATURES_CENTROID[train]
+		features_train_matrix=FEATURES_MATRIX[train]
 
-	# features_train_centroid=FEATURES_CENTROID[train]
-	# features_train_matrix=FEATURES_MATRIX[train]
-
-	features_test_centroid=FEATURES_CENTROID
-	features_test_matrix=FEATURES_MATRIX
+		features_test_centroid=FEATURES_CENTROID[test]
+		features_test_matrix=FEATURES_MATRIX[test]
 
 
-	# print(labels_train)
-	# print(features_train_matrix)
+		print(labels_train)
+		print(features_train_matrix)
 
-	for model_name, model_fun in MODELS.items():
-		print(model_name)
-		model=model_fun()
+		for model_name, model_fun in MODELS.items():
+			print(model_name)
+			model=model_fun()
 
 
-		#	TRAINING
-		# if model_name=='cnn':
-		# 	model.fit(	features_train_matrix, 
-		# 				labels_train,
-		# 				epochs=200, 
-		# 				batch_size=32, 
-		# 				validation_split=.1, 
-		# 				callbacks=[early_stopping])
+			#	TRAINING
+			if model_name=='cnn':
+				model.fit(	features_train_matrix, 
+							labels_train,
+							epochs=200, 
+							batch_size=32, 
+							validation_split=.1, 
+							callbacks=[early_stopping])
 
-		# elif model_name=='ffn':
-		# 	model.fit(	features_train_centroid,
-		# 				labels_train,
-		# 				epochs=200, 
-		# 				validation_split=.1, 
-		# 				batch_size=32, 
-		# 				callbacks=[early_stopping])
+			elif model_name=='ffn':
+				continue
+			# 	model.fit(	features_train_centroid,
+			# 				labels_train,
+			# 				epochs=200, 
+			# 				validation_split=.1, 
+			# 				batch_size=32, 
+			# 				callbacks=[early_stopping])
 
-		# elif model_name=='ridge':
-		# 	model.fit(	features_train_centroid,
-		# 				labels_train)
+			elif model_name=='ridge':
+				continue
+			# 	model.fit(	features_train_centroid,
+			# 				labels_train)
 
-		# else:
-		# 	raise ValueError('Unkown model name encountered.')
+			else:
+				raise ValueError('Unkown model name encountered.')
 
-		#	PREDICTION
-		if model_name=='cnn':
-			model.load_weights('./model_cnn.h5')
-			pred=model.predict(features_test_matrix)
-		else:
-			continue
-			# pred=model.predict(features_test_centroid)
+			#	PREDICTION
+			if model_name=='cnn':
+				pred=model.predict(features_test_matrix)
+				model.save_weights("./model_cnn.h5")
+			else:
+				continue
+				# pred=model.predict(features_test_centroid)
 
-		#	SCORING
-		# result=correlation(true=labels_test, pred=pred)
+			#	SCORING
+			result=correlation(true=labels_test, pred=pred)
 
-		#	RECORD
-		# row=model_name
-		# column=LABELS[target][problem]
-		# results_df.loc[row,column]=result
-		# print(results_df)
-		# performancens[model_name].loc[i+1,target]=result
-		# print(performancens[model_name])
-		print("#####PREDICTIONS for {0} {1} HERE".format(model_name,target))
-		print(pred)
+			#	RECORD
+			# row=model_name
+			# column=LABELS[target][problem]
+			# results_df.loc[row,column]=result
+			# print(results_df)
+			performancens[model_name].loc[i+1,target]=result
+			print(performancens[model_name])
 
 
 
@@ -206,7 +202,7 @@ for key, performance in performancens.items():
 	stdev=performance.std(axis=0)
 	performance.loc['stdev']=stdev
 	performance.loc['mean']=mean
-	performance.to_csv('results/{}_edited.tsv'.format(key), sep='\t')
+	performance.to_csv('results/{}.tsv'.format(key), sep='\t')
 
 # results_df.to_csv('results.tsv', sep='\t')
 

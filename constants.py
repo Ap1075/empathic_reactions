@@ -20,5 +20,7 @@ articles_full=root+'/data/articles_full_data.csv'
 
 # word vectors
 vectors=os.environ['VECTORS']
-facebook_fasttext_common_crawl=jn(vectors,'crawl-300d-2M.vec.zip')
+# facebook_fasttext_common_crawl=jn(vectors,'crawl-300d-2M.vec.zip')
+facebook_fasttext_common_crawl=jn(root,'crawl-300d-2M.vec.zip')
+# facebook_fasttext_common_crawl='./crawl-300d-2M.vec.zip'
 google_news_embeddings='/data1/embeddings/eng/GoogleNews-vectors-negative300.bin'
