@@ -18,6 +18,10 @@ The necessary FastText word vectors can be found [here](https://fasttext.cc/docs
 
 Once everything is set up, executing `run_experiments.sh` will re-run our cross-validation experiment. The results will be stored in `modeling/main/crossvalidation/results`.
 
+## Changes Made
+
+experiment_orig.py contains code for training over the dataset provided by the authors. experiment.py contains first iteration of code for testing. Changes must be made to run_experiments.sh accordingly for training or testing. Model saving and loading features added. Testing code (experiment.py) loads a pretrained model for testing.
+
 ## Paper & Citation
 
 ```
