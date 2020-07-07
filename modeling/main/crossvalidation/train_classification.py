@@ -45,7 +45,7 @@ results_df=pd.DataFrame(
 
 embs=common.get_facebook_fasttext_common_crawl(vocab_limit=None)
 
-TARGETS=['empathy', 'distress']
+TARGETS=['empathy_bin', 'distress_bin']
 
 
 
@@ -61,10 +61,10 @@ TARGETS=['empathy', 'distress']
 FEATURES_MATRIX=fe.embedding_matrix(data.essay, embs, common.TIMESTEPS)
 FEATURES_CENTROID=fe.embedding_centroid(data.essay, embs)
 
-# LABELS={
-# 	'empathy':{'classification':'empathy_bin', 'regression':'empathy'},
-# 	'distress':{'classification':'distress_bin', 'regression':'distress'}
-# }
+LABELS={
+	'empathy':{'classification':'empathy_bin', 'regression':'empathy'},
+	'distress':{'classification':'distress_bin', 'regression':'distress'}
+}
 
 def f1_score(true, pred):
 	pred=np.where(pred.flatten() >.5 ,1,0)
@@ -90,7 +90,7 @@ MODELS={
 							num_filters=100, 
 							learning_rate=1e-3,
 							dropout_conv=.5, 
-							problem='regression'),
+							problem='classification'),
 
 	'ffn': lambda:	common.get_ffn(
 							units=[300,256, 128,1], 
@@ -175,7 +175,7 @@ for i, splits in enumerate(kf_iterator.split(data)):
 			#	PREDICTION
 			if model_name=='cnn':
 				pred=model.predict(features_test_matrix)
-				model.save_weights("./model_cnn.h5")
+				model.save_weights("./classification_model_cnn.h5")
 			else:
 				continue
 				# pred=model.predict(features_test_centroid)
@@ -184,12 +184,12 @@ for i, splits in enumerate(kf_iterator.split(data)):
 			result=correlation(true=labels_test, pred=pred)
 
 			#	RECORD
-			# row=model_name
 			#####################################
-			# problem = 'classification'
-			# column=LABELS[target][problem]
-			# results_df.loc[row,column]=result
-			# print(results_df)
+			row=model_name
+			problem = 'classification'
+			column=LABELS[target.split('_')[0]][problem] # splitting empathy_bin to empathy only
+			results_df.loc[row,column]=result
+			print(results_df)
 			#####################################
 			performancens[model_name].loc[i+1,target]=result
 			print(performancens[model_name])

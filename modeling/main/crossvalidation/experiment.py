@@ -11,6 +11,7 @@ from sklearn.linear_model import RidgeCV, LogisticRegressionCV
 from sklearn.model_selection import KFold
 from pandas import json_normalize
 import json
+import itertools
 
 ## extra imports to set GPU options
 import tensorflow as tf
@@ -35,8 +36,8 @@ k.tensorflow_backend.set_session(tf.Session(config=config))
 # train, dev, test=util.train_dev_test_split(util.get_messages())
 # data=pd.concat([train,test], axis=0) #excluding dev set from CV
 # data=data.reset_index(drop=True)
-
-with open('/media/armaan/AP-HD1/Battlefield/gnani/datasets/Transcripts/20200301_0652_919741727232_12313112.mp3.xyz') as f: 
+file = '20200306_1530_919599800518_12220083.mp3.xyz'
+with open('/media/armaan/AP-HD1/Battlefield/gnani/datasets/Transcripts/20200306_1530_919599800518_12220083.mp3.xyz') as f: 
     d = json.load(f)
 
 my_test = json_normalize(d['results'],record_path ='alternatives')
@@ -129,7 +130,8 @@ performancens={name:pd.DataFrame(columns=['empathy', 'distress'],
 	index=range(1,num_splits+1)) for name in MODELS.keys()}
 
 
-
+emp_dis_df = pd.DataFrame(columns=['file_name','empathy', 'distress'])
+emp_dis_df['file_name'] = file
 
 kf_iterator=KFold(n_splits=num_splits, shuffle=True, random_state=42)
 # for i, splits in enumerate(kf_iterator.split(data)):
@@ -140,7 +142,7 @@ kf_iterator=KFold(n_splits=num_splits, shuffle=True, random_state=42)
 k.clear_session()
 
 for target in TARGETS:
-	print(target)
+	# print(target)
 
 	# labels_train=data[target][train]
 	# labels_test=data[target][test]
@@ -156,7 +158,7 @@ for target in TARGETS:
 	# print(features_train_matrix)
 
 	for model_name, model_fun in MODELS.items():
-		print(model_name)
+		# print(model_name)
 		model=model_fun()
 
 
@@ -202,11 +204,12 @@ for target in TARGETS:
 		# print(results_df)
 		# performancens[model_name].loc[i+1,target]=result
 		# print(performancens[model_name])
-		print("#####PREDICTIONS for {0} {1} HERE".format(model_name,target))
-		print(pred)
+		print("#####PREDICTIONS for {0} {1} added to DF".format(model_name,target))
+		emp_dis_df[target] = list(itertools.chain.from_iterable(pred))
+		# print(pred)
 
 
-
+emp_dis_df.to_csv('fina_results.csv', index=False)
 #average results data frame
 if not os.path.isdir('results'):
 	os.makedirs('results')
