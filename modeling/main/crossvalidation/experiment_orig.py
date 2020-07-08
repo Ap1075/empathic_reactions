@@ -175,7 +175,7 @@ for i, splits in enumerate(kf_iterator.split(data)):
 			#	PREDICTION
 			if model_name=='cnn':
 				pred=model.predict(features_test_matrix)
-				model.save_weights("./model_cnn.h5")
+				model.save_weights("./models/model_cnn_{}.h5".format(target))
 			else:
 				continue
 				# pred=model.predict(features_test_centroid)

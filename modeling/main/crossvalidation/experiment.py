@@ -59,7 +59,7 @@ results_df=pd.DataFrame(
 embs=common.get_facebook_fasttext_common_crawl(vocab_limit=None)
 
 TARGETS=['empathy', 'distress']
-
+# TARGETS=['empathy', 'distress'] # for classification
 
 
 
@@ -188,7 +188,7 @@ for target in TARGETS:
 
 		#	PREDICTION
 		if model_name=='cnn':
-			model.load_weights('./model_cnn.h5')
+			model.load_weights('./models/model_cnn_{}.h5'.format(target))
 			pred=model.predict(features_test_matrix)
 		else:
 			continue
@@ -206,7 +206,7 @@ for target in TARGETS:
 		# print(performancens[model_name])
 		print("#####PREDICTIONS for {0} {1} added to DF".format(model_name,target))
 		emp_dis_df[target] = list(itertools.chain.from_iterable(pred))
-		# print(pred)
+		print(pred)
 
 
 emp_dis_df.to_csv('fina_results.csv', index=False)
