@@ -43,7 +43,9 @@ def get_facebook_fasttext_common_crawl(vocab_limit=None):
 			path=cs.facebook_fasttext_common_crawl,
 			vocab_limit=vocab_limit,
 			zipped=True,
-			file='crawl-300d-2M.vec')
+			# file = 'cc.hi.300.vec')
+			file = 'hindi2vec.vec')
+			# file='crawl-300d-2M.vec')
 
 
 
@@ -59,6 +61,7 @@ def get_article_data():
 
 
 TIMESTEPS=200
+# TIMESTEPS=100
 
 
 def get_rnn(rnn_type,
@@ -146,12 +149,12 @@ def get_cnn(input_shape, num_outputs, num_filters, learning_rate, dropout_conv, 
 	pool_1=AveragePooling1D(pool_size=input_shape[0]-filter_size+1, strides=1)(conv_1)
 	pool_drop_1=Dropout(dropout_conv)(pool_1)
 
-	filter_size=2
+	filter_size=3
 	conv_2=Conv1D(filters=num_filters, kernel_size=filter_size, strides=1, activation='relu', kernel_regularizer=regularizers.l2(l2_strength))(inputs_drop)
 	pool_2=AveragePooling1D(pool_size=input_shape[0]-filter_size+1, strides=1)(conv_2)
 	pool_drop_2=Dropout(dropout_conv)(pool_2)
 	
-	filter_size=3
+	filter_size=5
 	conv_3=Conv1D(filters=num_filters, kernel_size=filter_size, strides=1, activation='relu', kernel_regularizer=regularizers.l2(l2_strength))(inputs_drop)
 	pool_3=AveragePooling1D(pool_size=input_shape[0]-filter_size+1, strides=1)(conv_3)
 	pool_drop_3=Dropout(dropout_conv)(pool_3)
@@ -172,7 +175,7 @@ def get_cnn(input_shape, num_outputs, num_filters, learning_rate, dropout_conv, 
 	dense_drop = Dropout(.5)(dense)
 	
 	if problem=='classification':
-		output = Dense(units=num_outputs, activation='sigmoid', kernel_regularizer=regularizers.l2(l2_strength))(dense_drop)
+		output = Dense(units=num_outputs, activation='softmax', kernel_regularizer=regularizers.l2(l2_strength))(dense_drop)
 	if problem=='regression':
 		output = Dense(units=num_outputs, activation=None, kernel_regularizer=regularizers.l2(l2_strength))(dense_drop)
 	# this creates a model that includes
@@ -182,9 +185,44 @@ def get_cnn(input_shape, num_outputs, num_filters, learning_rate, dropout_conv, 
 	if problem=='regression':
 		model.compile(loss='mse', optimizer=optimizer)
 	if problem=='classification':
-		model.compile(loss='binary_crossentropy', optimizer=optimizer)
+		model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['categorical_accuracy'])
+	# model.summary()
 	return model
 
+# def get_2dcnn(input_shape, num_outputs, num_filters):
+# 	embedding_dim=input_shape[1]
+# 	sequence_length=input_shape[0]
+# 	filter_sizes = [3,4,5]
+
+# 	inputs = Input(shape=(input_shape), dtype='int32')
+# 	embedding = embedding_layer(inputs)
+
+# 	print(embedding.shape)
+# 	reshape = Reshape((sequence_length,embedding_dim,1))(embedding)
+# 	print(reshape.shape)
+
+# 	conv_0 = Conv2D(num_filters, kernel_size=(filter_sizes[0], embedding_dim), padding='valid', kernel_initializer='normal', activation='relu')(reshape)
+# 	conv_1 = Conv2D(num_filters, kernel_size=(filter_sizes[1], embedding_dim), padding='valid', kernel_initializer='normal', activation='relu')(reshape)
+# 	conv_2 = Conv2D(num_filters, kernel_size=(filter_sizes[2], embedding_dim), padding='valid', kernel_initializer='normal', activation='relu')(reshape)
+
+# 	maxpool_0 = MaxPool2D(pool_size=(sequence_length - filter_sizes[0] + 1, 1), strides=(1,1), padding='valid')(conv_0)
+# 	maxpool_1 = MaxPool2D(pool_size=(sequence_length - filter_sizes[1] + 1, 1), strides=(1,1), padding='valid')(conv_1)
+# 	maxpool_2 = MaxPool2D(pool_size=(sequence_length - filter_sizes[2] + 1, 1), strides=(1,1), padding='valid')(conv_2)
+
+# 	concatenated_tensor = Concatenate(axis=1)([maxpool_0, maxpool_1, maxpool_2])
+# 	flatten = Flatten()(concatenated_tensor)
+# 	dropout = Dropout(drop)(flatten)
+# 	output = Dense(units=4, activation='softmax')(dropout)
+
+# 	# this creates a model that includes
+# 	model = Model(inputs=inputs, outputs=output)
+
+# 	# checkpoint = ModelCheckpoint('job_desc_cnn.hdf5', monitor='val_acc', verbose=1, save_best_only=True, mode='auto')
+# 	adam = Adam(lr=1e-4, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+
+
+# 	model.compile(optimizer='adam', loss='categorical_crossentropy',metrics=['categorical_accuracy'])
+# 	return model
 
 
 def get_cnn_lstm(input_shape, num_outputs, learning_rate, problem):

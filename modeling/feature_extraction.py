@@ -16,6 +16,7 @@ def embedding_centroid(raw_data, embs):
 		sentences=[str.lower() for str in tokenize(raw_data[i])]
 		# print(sent)
 		features=[embs.represent(str) for str in sentences]
+		# features = np.array(features)
 		features=np.stack(features, axis=0)
 		# print(features)
 		out_matrix[i,:]=features.mean(axis=0)
